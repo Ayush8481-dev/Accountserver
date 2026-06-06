@@ -1,14 +1,32 @@
-export default async function handler(req, res) {
-  // 1. Get the mobile number from the query parameters: ?number=1234567890
-  const { number } = req.query;
+export const config = {
+  runtime: 'edge', // Upgraded to Edge Runtime for instant execution and 0ms cold starts
+};
 
-  // 2. Validate that a number was provided
-  if (!number) {
-    return res.status(400).json({ error: "Please provide a mobile number. Example: ?number=9876543210" });
+export default async function handler(req) {
+  // 1. Parse the URL to get parameters
+  const url = new URL(req.url);
+  const number = url.searchParams.get("number");
+  const name = url.searchParams.get("name");
+
+  // 2. Validate the mobile number (Must be exactly 10 digits)
+  if (!number || !/^\d{10}$/.test(number)) {
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: "Please provide a valid 10-digit mobile number. Example: ?number=9876543210" 
+      }),
+      { 
+        status: 400, 
+        headers: { "Content-Type": "application/json" } 
+      }
+    );
   }
 
+  // 3. Set the name, default to a blank space if not provided
+  const userName = name || " ";
+
   try {
-    // 3. Make the POST request to the VBSPU server
+    // 4. Make the POST request to VBSPU server
     const response = await fetch("https://vbspuresult.org.in/Account/SendOtp", {
       method: "POST",
       headers: {
@@ -18,40 +36,53 @@ export default async function handler(req, res) {
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         "Origin": "https://vbspuresult.org.in",
         "Referer": "https://vbspuresult.org.in/Account/Registration",
-        // Adding a User-Agent helps prevent the server from blocking the request
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
       },
-      // URLSearchParams automatically formats the body as x-www-form-urlencoded
       body: new URLSearchParams({
         mobile: number,
-        Name: "VercelUser" // You can pass a default name here
+        Name: userName
       })
     });
 
-    // 4. Read the response from VBSPU
+    // 5. Extract response (The OTP)
     const rawData = await response.text();
     let otpData;
-
-    // Try to parse it as JSON, otherwise just return the raw text
     try {
       otpData = JSON.parse(rawData);
     } catch (e) {
       otpData = rawData;
     }
 
-    // 5. Send the result back to your frontend
-    return res.status(200).json({
-      success: true,
-      target_number: number,
-      otp_received: otpData
-    });
+    // 6. Return successful response
+    return new Response(
+      JSON.stringify({
+        success: true,
+        target_number: number,
+        used_name: userName,
+        otp_received: otpData
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          // Force Vercel NOT to cache this response so you always get a fresh OTP
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate", 
+        }
+      }
+    );
 
   } catch (error) {
-    // Handle any server/network errors
-    return res.status(500).json({ 
-      success: false, 
-      error: "Failed to fetch OTP from VBSPU server", 
-      details: error.message 
-    });
+    // 7. Handle failures safely
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "Failed to fetch OTP from server",
+        details: error.message
+      }),
+      { 
+        status: 500, 
+        headers: { "Content-Type": "application/json" } 
+      }
+    );
   }
 }
