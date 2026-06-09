@@ -48,9 +48,9 @@ export default async function handler(req) {
         "Referer": "https://www.pw.live/",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
       },
-      // PenPencil API typically expects a JSON payload with phone and countryCode
+      // CHANGED: Replaced "phone" with "mobile" to match exactly what their server expects
       body: JSON.stringify({
-        phone: number,
+        mobile: number, 
         countryCode: "+91"
       })
     });
