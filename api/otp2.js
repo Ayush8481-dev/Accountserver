@@ -1,12 +1,12 @@
 export const config = {
-  runtime: 'edge', // Upgraded to Edge Runtime for instant execution and 0ms cold starts
+  runtime: 'edge', 
 };
 
 export default async function handler(req) {
   // 1. Parse the URL to get parameters
   const url = new URL(req.url);
   const number = url.searchParams.get("number");
-  const type = url.searchParams.get("type") || "0"; // Default to 0 if not provided
+  const type = url.searchParams.get("type") || "0"; 
 
   // 2. Validate the mobile number (Must be exactly 10 digits)
   if (!number || !/^\d{10}$/.test(number)) {
@@ -46,9 +46,14 @@ export default async function handler(req) {
         "Content-Type": "application/json",
         "Origin": "https://www.pw.live",
         "Referer": "https://www.pw.live/",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+        
+        // --- ADDED HEADERS FOR PENPENCIL API IDENTIFICATION ---
+        "client-id": "5eb393ee95fab7468a79d189", // PW's primary identifier
+        "organization-id": "5eb393ee95fab7468a79d189", // Redundancy for User Microservice
+        "client-type": "WEB" 
+        // ------------------------------------------------------
       },
-      // CHANGED: Replaced "phone" with "mobile" to match exactly what their server expects
       body: JSON.stringify({
         mobile: number, 
         countryCode: "+91"
@@ -76,7 +81,6 @@ export default async function handler(req) {
         status: response.ok ? 200 : response.status,
         headers: {
           "Content-Type": "application/json",
-          // Force Vercel NOT to cache this response so you always hit the endpoint
           "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate", 
         }
       }
