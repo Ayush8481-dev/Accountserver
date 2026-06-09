@@ -31,8 +31,10 @@ export default async function handler(req) {
   }
 
   try {
-    // 4. Make the POST request to PenPencil server
-    const response = await fetch(`api.penpencil.co/v1/users/get-otp?smsType=0&fallback=true${type}&fallback=true`, {
+    // 4. Make the POST request to the CORRECT PenPencil get-otp endpoint
+    const targetUrl = `https://api.penpencil.co/v1/users/get-otp?smsType=${type}&fallback=true`;
+
+    const response = await fetch(targetUrl, {
       method: "POST",
       headers: {
         "Accept": "application/json, text/plain, */*",
@@ -43,13 +45,13 @@ export default async function handler(req) {
         
         // PW/PenPencil specific headers
         "client-id": "5eb393ee95fab7468a79d189",
-        "client-type": "WEB"
+        "client-type": "WEB",
+        "client-version": "1.0.0" 
       },
       body: JSON.stringify({
-        mobile: number, 
+        phone: number, // "get-otp" uses 'phone' whereas some other endpoints use 'mobile'
         countryCode: "+91",
-        // --- ADDED: Organization ID in the body to satisfy the User Microservice ---
-        organizationId: "5eb393ee95fab7468a79d189" 
+        organizationId: "5eb393ee95fab7468a79d189" // Satisfies the User Microservice verification
       })
     });
 
