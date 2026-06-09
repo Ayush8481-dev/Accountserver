@@ -1,5 +1,5 @@
 export const config = {
-  runtime: 'edge', // Upgraded to Edge Runtime for instant execution
+  runtime: 'edge', 
 };
 
 export default async function handler(req) {
@@ -31,7 +31,7 @@ export default async function handler(req) {
   }
 
   try {
-    // 4. Make the POST request to the CORRECT PenPencil get-otp endpoint
+    // 4. Make the POST request to the PenPencil get-otp endpoint
     const targetUrl = `https://api.penpencil.co/v1/users/get-otp?smsType=${type}&fallback=true`;
 
     const response = await fetch(targetUrl, {
@@ -49,9 +49,10 @@ export default async function handler(req) {
         "client-version": "1.0.0" 
       },
       body: JSON.stringify({
-        phone: number, // "get-otp" uses 'phone' whereas some other endpoints use 'mobile'
+        // --- ADDED: Replaced 'phone' with 'username' ---
+        username: number, 
         countryCode: "+91",
-        organizationId: "5eb393ee95fab7468a79d189" // Satisfies the User Microservice verification
+        organizationId: "5eb393ee95fab7468a79d189" 
       })
     });
 
