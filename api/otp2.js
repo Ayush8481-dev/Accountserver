@@ -1,5 +1,5 @@
 export const config = {
-  runtime: 'edge', 
+  runtime: 'edge', // Upgraded to Edge Runtime for instant execution
 };
 
 export default async function handler(req) {
@@ -15,24 +15,18 @@ export default async function handler(req) {
         success: false, 
         error: "Please provide a valid 10-digit mobile number. Example: ?number=9876543210" 
       }),
-      { 
-        status: 400, 
-        headers: { "Content-Type": "application/json" } 
-      }
+      { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
 
-  // 3. Validate the SMS type (Must be 0, 1, or 2)
+  // 3. Validate the SMS type
   if (!["0", "1", "2"].includes(type)) {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: "Invalid type parameter. Please select 0, 1, or 2. Example: ?number=9876543210&type=1" 
+        error: "Invalid type parameter. Please select 0, 1, or 2." 
       }),
-      { 
-        status: 400, 
-        headers: { "Content-Type": "application/json" } 
-      }
+      { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -41,22 +35,21 @@ export default async function handler(req) {
     const response = await fetch(`https://api.penpencil.co/v1/users/resend-otp-secure?smsType=${type}`, {
       method: "POST",
       headers: {
-        "Host": "api.penpencil.co",
         "Accept": "application/json, text/plain, */*",
         "Content-Type": "application/json",
         "Origin": "https://www.pw.live",
         "Referer": "https://www.pw.live/",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
         
-        // --- ADDED HEADERS FOR PENPENCIL API IDENTIFICATION ---
-        "client-id": "5eb393ee95fab7468a79d189", // PW's primary identifier
-        "organization-id": "5eb393ee95fab7468a79d189", // Redundancy for User Microservice
-        "client-type": "WEB" 
-        // ------------------------------------------------------
+        // PW/PenPencil specific headers
+        "client-id": "5eb393ee95fab7468a79d189",
+        "client-type": "WEB"
       },
       body: JSON.stringify({
         mobile: number, 
-        countryCode: "+91"
+        countryCode: "+91",
+        // --- ADDED: Organization ID in the body to satisfy the User Microservice ---
+        organizationId: "5eb393ee95fab7468a79d189" 
       })
     });
 
@@ -94,10 +87,7 @@ export default async function handler(req) {
         error: "Failed to interact with PenPencil server",
         details: error.message
       }),
-      { 
-        status: 500, 
-        headers: { "Content-Type": "application/json" } 
-      }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
