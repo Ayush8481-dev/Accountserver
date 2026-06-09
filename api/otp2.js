@@ -32,7 +32,7 @@ export default async function handler(req) {
 
   try {
     // 4. Make the POST request to PenPencil server
-    const response = await fetch(`https://api.penpencil.co/v1/users/resend-otp-secure?smsType=${type}`, {
+    const response = await fetch(`api.penpencil.co/v1/users/get-otp?smsType=0&fallback=true${type}&fallback=true`, {
       method: "POST",
       headers: {
         "Accept": "application/json, text/plain, */*",
